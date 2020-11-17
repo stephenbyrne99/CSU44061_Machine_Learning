@@ -13,6 +13,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
 import math   
+from sklearn.dummy import DummyClassifier
 
 def create_test_space(size):
     # create test space
@@ -29,12 +30,13 @@ def graph_3d_prediction(X,y,y_pred,title):
     fig = plt.figure()
     ax = fig.add_subplot(111,projection='3d')
     surface = ax.plot_trisurf(X_test_space[:,0], X_test_space[:,1], y_pred, cmap='viridis', edgecolor='none')
-    ax.scatter(X[:,0],X[:,1],y,c='blue')
+    ax.scatter(X[:,0],X[:,1],y,c='blue',label="Training Data")
     ax.set_xlabel('first feature')
     ax.set_ylabel('second feature')
     ax.set_zlabel('target')
     fig.colorbar(surface, shrink=0.5, aspect=5, label='Predictions')
     plt.title(title)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),shadow=True, ncol=2)
     plt.show(fig)
 
 
@@ -81,35 +83,24 @@ def main_i():
     print(df.shape)
 
     poly_transform = PolynomialFeatures(degree=5)  
-
+    # chang4 qll or below into loops
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20)
 
-    model_lasso_c_1 = Lasso(alpha=0.5)
-    model_lasso_c_10 = Lasso(alpha=0.05)
-    model_lasso_c_1000 = Lasso(alpha=0.0005)
+    # all lassos
 
-    model_lasso_c_1.fit(poly_transform.fit_transform(X_train),y_train)
-    print('Lasso C=1 Coef : ' , model_lasso_c_1.coef_)
-    print('Lasso C=1 Intercept : ' , model_lasso_c_1.intercept_)
+    # C = [1,2,5,10,1000]
+    c_values = [1,2,10,1000]
+    for ci in c_values:
+        ai = 1/(2*ci)
+        model_lasso_c_i = Lasso(alpha=ai)
+        model_lasso_c_i.fit(poly_transform.fit_transform(X_train),y_train)
+        print('Lasso C=',ci,'Coef : ' , model_lasso_c_i.coef_)
+        print('Lasso C=',ci,' Intercept : ' , model_lasso_c_i.intercept_)
 
-    model_lasso_c_10.fit(poly_transform.fit_transform(X_train),y_train)
-    print('Lasso C=1 Coef : ' , model_lasso_c_10.coef_)
-    print('Lasso C=1 Intercept : ' , model_lasso_c_10.intercept_)
-
-    model_lasso_c_1000.fit(poly_transform.fit_transform(X_train),y_train)
-    print('Lasso C=1 Coef : ' , model_lasso_c_1000.coef_)
-    print('Lasso C=1 Intercept : ' , model_lasso_c_1000.intercept_)
-
-    # create test space
-    X_test_space = create_test_space(2)
-
-    y_pred_1 = model_lasso_c_1.predict(poly_transform.fit_transform(X_test_space))
-    y_pred_10 = model_lasso_c_10.predict(poly_transform.fit_transform(X_test_space))
-    y_pred_1000 = model_lasso_c_1000.predict(poly_transform.fit_transform(X_test_space))
-
-    graph_3d_prediction(X_test,y_test,y_pred_1,'Test Results Lasso C=1')
-    graph_3d_prediction(X_test,y_test,y_pred_10,'Test Results Lasso C=10')
-    graph_3d_prediction(X_test,y_test,y_pred_1000,'Test Results Lasso C=1000')
+        X_test_space = create_test_space(5)
+        y_pred_i = model_lasso_c_i.predict(poly_transform.fit_transform(X_test_space))
+        title = 'Test Results Lasso C=' + str(ci)
+        graph_3d_prediction(X_train,y_train,y_pred_i,title)
 
 
     #####################################################
@@ -127,29 +118,19 @@ def main_i():
     #####################################################
 
 
-    model_ridge_c_1 = Ridge(alpha=0.5)
-    model_ridge_c_10 = Ridge(alpha=0.05)
-    model_ridge_c_1000 = Ridge(alpha=0.0005)
+    # # C = [1,2,10,1000]
+    c_values = [0.0000001,0.00001,0.001,1]
+    for ci in c_values:
+        ai = 1/(2*ci)
+        model_ridge_c_i = Ridge(alpha=ai)
+        model_ridge_c_i.fit(poly_transform.fit_transform(X_train),y_train)
+        print('Ridge C=',ci,'Coef : ' , model_ridge_c_i.coef_)
+        print('Ridge C=',ci,' Intercept : ' , model_ridge_c_i.intercept_)
 
-    model_ridge_c_1.fit(poly_transform.fit_transform(X_train),y_train)
-    print('Ridge C=1 Coef : ' , model_ridge_c_1.coef_)
-    print('Ridge C=1 Intercept : ' , model_ridge_c_1.intercept_)
-
-    model_ridge_c_10.fit(poly_transform.fit_transform(X_train),y_train)
-    print('Ridge C=1 Coef : ' , model_ridge_c_10.coef_)
-    print('Ridge C=1 Intercept : ' , model_ridge_c_10.intercept_)
-
-    model_ridge_c_1000.fit(poly_transform.fit_transform(X_train),y_train)
-    print('Ridge C=1 Coef : ' , model_ridge_c_1000.coef_)
-    print('Ridge C=1 Intercept : ' , model_ridge_c_1000.intercept_)
-
-    y_pred_1 = model_ridge_c_1.predict(poly_transform.fit_transform(X_test_space))
-    y_pred_10 = model_ridge_c_10.predict(poly_transform.fit_transform(X_test_space))
-    y_pred_1000 = model_ridge_c_1000.predict(poly_transform.fit_transform(X_test_space))
-
-    graph_3d_prediction(X_test,y_test,y_pred_1,'Test Results Ridge C=1')
-    graph_3d_prediction(X_test,y_test,y_pred_10,'Test Results Ridge C=10')
-    graph_3d_prediction(X_test,y_test,y_pred_1000,'Test Results Ridge C=1000') 
+        X_test_space = create_test_space(4)
+        y_pred_i = model_ridge_c_i.predict(poly_transform.fit_transform(X_test_space))
+        title = 'Test Results Ridge C=' + str(ci)
+        graph_3d_prediction(X_train,y_train,y_pred_i,title)
     
     """
         Part (ii)
@@ -161,6 +142,7 @@ def main_i():
     #                                                   #
     #####################################################
 
+    model_lasso_c_1 = Lasso(alpha=0.5)
     folds = [2,5,10,25,40,100]
     variances = []
     means = []
@@ -169,7 +151,7 @@ def main_i():
         mse_estimates = []
         for train, test in kf.split(X):
             model_lasso_c_1.fit(poly_transform.fit_transform(X[train]),y[train])
-            X_test_space = create_test_space(2)
+            X_test_space = create_test_space(4)
             y_pred_1 = model_lasso_c_1.predict(poly_transform.fit_transform(X[test]))
             mse_estimates.append(mean_squared_error(y_pred_1, y[test]))
         
@@ -181,10 +163,10 @@ def main_i():
     print(variances)
     print(means)
 
-    plt.errorbar(folds,means,yerr=variances,linewidth=3,capsize=5)
+    plt.errorbar(folds,means,yerr=np.sqrt(variances),linewidth=3,capsize=5)
     plt.title('Lasso c=1 for multiple folds')
-    plt.xlabel('folds'); 
-    plt.ylabel('scores')
+    plt.xlabel('Number of folds'); 
+    plt.ylabel('Mean/StdDev Value')
     plt.show()
 
 
@@ -194,7 +176,7 @@ def main_i():
     #                                                   #
     #####################################################
 
-    C_values = [2,5,10,25,50,100]
+    C_values = [1,2,10,1000]
     std_devs = []
     means = []
     for Ci in C_values:
@@ -204,7 +186,7 @@ def main_i():
         mse_estimates = []
         for train, test in kf.split(X):
             model_lasso_c_i .fit(poly_transform.fit_transform(X[train]),y[train])
-            X_test_space = create_test_space(2)
+            X_test_space = create_test_space(4)
             y_pred_1 = model_lasso_c_i.predict(poly_transform.fit_transform(X[test]))
             mse_estimates.append(mean_squared_error(y_pred_1, y[test]))
 
@@ -216,9 +198,9 @@ def main_i():
     print(std_devs)
 
     plt.errorbar(C_values,means,yerr=std_devs,linewidth=3,capsize=5)
-    plt.title('Lasso for multiple c values')
-    plt.xlabel('C_Values'); 
-    plt.ylabel('scores')
+    plt.title('5 Fold Lasso for multiple C values')
+    plt.xlabel('C Values'); 
+    plt.ylabel('Mean/STD dev value')
     plt.show()
 
     #####################################################
@@ -233,6 +215,7 @@ def main_i():
     #                                                   #
     #####################################################
 
+    model_ridge_c_1 = Lasso(alpha=0.5)
     folds = [2,5,10,25,40,100]
     variances = []
     means = []
@@ -241,7 +224,7 @@ def main_i():
         mse_estimates = []
         for train, test in kf.split(X):
             model_ridge_c_1.fit(poly_transform.fit_transform(X[train]),y[train])
-            X_test_space = create_test_space(2)
+            X_test_space = create_test_space(4)
             y_pred_1 = model_ridge_c_1.predict(poly_transform.fit_transform(X[test]))
             mse_estimates.append(mean_squared_error(y_pred_1, y[test]))
         
@@ -255,12 +238,12 @@ def main_i():
 
     plt.errorbar(folds,means,yerr=variances,linewidth=3,capsize=5)
     plt.xlabel('folds'); 
-    plt.ylabel('scores');
+    plt.ylabel('values');
     plt.title('Ridge C=1 for different folds')
     plt.show()
 
 
-    C_values = [0.001,0.01,1,10,100]
+    C_values = [0.0000001,0.00001,0.001,1,10,1000]
     std_devs = []
     means = []
     for Ci in C_values:
@@ -270,7 +253,7 @@ def main_i():
         mse_estimates = []
         for train, test in kf.split(X):
             model_ridge_c_i .fit(poly_transform.fit_transform(X[train]),y[train])
-            X_test_space = create_test_space(2)
+            X_test_space = create_test_space(4)
             y_pred_1 = model_ridge_c_i.predict(poly_transform.fit_transform(X[test]))
             mse_estimates.append(mean_squared_error(y_pred_1, y[test]))
 
@@ -283,7 +266,7 @@ def main_i():
 
     plt.errorbar(np.log10(C_values),means,yerr=std_devs,linewidth=3,capsize=5)
     plt.xlabel('Log10(C_Values)'); 
-    plt.ylabel('scores');
+    plt.ylabel('values');
     plt.title('Ridge for multiple c values')
     plt.show()
 
